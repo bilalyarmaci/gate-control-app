@@ -142,6 +142,10 @@ function switchMode(mode) {
 
 async function populateCameraDropdown() {
     try {
+        // Request camera permission to populate device labels
+        const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        tempStream.getTracks().forEach(track => track.stop());
+
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
