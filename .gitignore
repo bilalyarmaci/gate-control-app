@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+env/
+venv/
+
+# Model files (these can be large)
+*.pt
+*.pth
+
+# Test outputs
+tests/*.jpg
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store

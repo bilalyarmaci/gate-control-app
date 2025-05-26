@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gate Control Demo</title>
+</head>
+
+<body>
+    <h1>Live Stream Detection</h1>
+    <video id="video" width="480" autoplay muted></video>
+    <canvas id="canvas" width="480" height="360" style="display:none;"></canvas>
+    <pre id="output"></pre>
+
+    <script>
+        const video = document.getElementById("video"),
+            canvas = document.getElementById("canvas"),
+            output = document.getElementById("output"),
+            ctx = canvas.getContext("2d");
+
+        // 1) Capture phone camera (allow-access)
+        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+            video.srcObject = stream;
+            video.play();
+            setInterval(captureAndSend, 500);  // send every 0.5s
+        });
+
+        function captureAndSend() {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imgData = canvas.toDataURL("image/jpeg", 0.8);
+            fetch("/detect", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ image: imgData })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    output.textContent = JSON.stringify(data.detections, null, 2);
+                });
+        }
+    </script>
+</body>
+
+</html>

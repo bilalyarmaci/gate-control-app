@@ -1,0 +1,18 @@
+Başlık: Araç kapısı plaka tespit programı:Program aşağıdaki gibi çalışacaktır: eğer kapı önüne bir kamyon ve tır yanaşmış ise daha önceden girilmiş plakalar ile o aracın plakası karşılaştırılacak ve eğer o plaka database de kayıtlı ise ardunio üzerinden bir kapı açılacak.
+
+
+Eğer kamyon/tır harici araç yanaşmış ise ardunio üzerindeki bir buzzer uyarı verecek.
+
+
+bu uygulama flask üzerinden mobil uygulama olarak yapılacaktır. Yapamayanlar en azından uygulamayı PC de çalıştıracak fakat cep telefonunun kamerası üzerinden (web cam olarak kullanılacak) araç ve plaka tespiti yapılacak.
+
+kamyonun plakası okunup karşılaştırılacak ve duruma gore ardunio kapı açılacak. Otomobil gösterildiğinde buzzer ötecek.
+
+
+Arayüz tasarımında bir sayfada canlı kamera görüntüsü olacak. Bu görüntü üzerinde eğer kamyon tespiti olursa "kamyon tespit edildi" diye uyarı verecek. Plaka kayıtlı ise; araç içeri alınıyor diye uyarı verecek. Plakaların önceden girilebilmesi için arayüz de bir ayrı sayfa olacak.
+
+
+Kamyon ve diğer araçlardan biner adet resim elde edilecek ve bounding box ile etiketlenecek. Ayrıca aynı resim üzerinde plaka alanları etiketlenecek.
+
+
+Kodlar github üzerinde olacak. Dataset google drive linki olarak zipli olarak verilecek.
