@@ -135,7 +135,7 @@ function switchMode(mode) {
         case 'camera':
             document.getElementById('cameraControls').classList.remove('d-none');
             containerVideo.classList.remove('d-none');
-            startCamera();
+            // startCamera(); // Removed as per instructions
             break;
     }
 }
@@ -172,6 +172,12 @@ async function startCamera() {
             return;
         }
 
+        // Stop any existing video stream
+        if (videoStream) {
+            videoStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Start the selected camera
         videoStream = await navigator.mediaDevices.getUserMedia({
             video: { deviceId: { exact: selectedDeviceId } }
         });
@@ -186,6 +192,9 @@ async function startCamera() {
 
 // Populate the camera dropdown when the page loads
 window.addEventListener('load', populateCameraDropdown);
+
+// Add cameraSelect change event to startCamera, at root level
+document.getElementById('cameraSelect').addEventListener('change', startCamera);
 
 function stopVideoStream() {
     if (videoElement.src) {
