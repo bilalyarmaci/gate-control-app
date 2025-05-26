@@ -19,3 +19,7 @@ tests/*.jpg
 
 # OS
 .DS_Store
+
+# Files
+steps.md
+data/

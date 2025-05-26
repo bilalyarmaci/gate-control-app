@@ -2,5 +2,5 @@ flask
 ultralytics
 torch        # CPU or torch-cuXX if you have a GPU locally
 opencv-python
-pytesseract  # or easyocr if you prefer
+easyocr      # General purpose OCR library
 pyserial     # for Arduino comms

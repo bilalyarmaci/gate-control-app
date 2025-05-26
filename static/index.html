@@ -1,43 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>Gate Control Demo</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gate Control – Vehicle & Plate Detection</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/notif.css" rel="stylesheet">
+    <style>
+        #preview {
+            max-width: 100%;
+        }
+
+        .bbox {
+            position: absolute;
+            border: 2px solid;
+            pointer-events: none;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .bbox-label {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            border-radius: 3px;
+            z-index: 11;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 2rem;
+        }
+
+        #canvas-container {
+            position: relative;
+            display: block;
+            width: 100%;
+            margin: 1rem 0;
+            text-align: left;
+            background: #f8f9fa;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #previewCanvas {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: block;
+        }
+
+        .controls-container {
+            margin-bottom: 2rem;
+        }
+
+        .alert {
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+
+        .confidence-high {
+            color: #28a745;
+        }
+
+        .confidence-medium {
+            color: #ffc107;
+        }
+
+        .confidence-low {
+            color: #dc3545;
+        }
+
+        /* Make the file input and buttons look better */
+        #imageInput {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Status message styling */
+        #status {
+            max-width: 800px;
+            margin: 1rem auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Detection details styling */
+        .detection-details {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem auto;
+            max-width: 800px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .detection-item {
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid #007bff;
+        }
+
+        .detection-item.truck {
+            border-left-color: #dc3545;
+        }
+
+        .detection-item.car {
+            border-left-color: #ffc107;
+        }
+
+        .detection-item.license_plate {
+            border-left-color: #28a745;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>Live Stream Detection</h1>
-    <video id="video" width="480" autoplay muted></video>
-    <canvas id="canvas" width="480" height="360" style="display:none;"></canvas>
-    <pre id="output"></pre>
+    <div class="container py-4">
+        <h1 class="mb-4 text-center">Gate Control – Vehicle &amp; Plate Detection</h1>
 
-    <script>
-        const video = document.getElementById("video"),
-            canvas = document.getElementById("canvas"),
-            output = document.getElementById("output"),
-            ctx = canvas.getContext("2d");
+        <!-- Controls container -->
+        <div class="controls-container text-center">
+            <!-- Input selection -->
+            <div class="btn-group mb-3" role="group">
+                <button type="button" class="btn btn-primary" id="imageBtn">Image</button>
+                <button type="button" class="btn btn-primary" id="videoBtn">Video</button>
+                <button type="button" class="btn btn-primary" id="cameraBtn">Live Camera</button>
+            </div>
 
-        // 1) Capture phone camera (allow-access)
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-            video.srcObject = stream;
-            video.play();
-            setInterval(captureAndSend, 500);  // send every 0.5s
-        });
+            <!-- Manage allowed license plates -->
+            <div id="managePlates" class="mb-4">
+                <textarea id="allowedPlatesInput" class="form-control" rows="3"
+                    placeholder="Enter allowed plates, comma-separated (e.g. ABC123, XYZ789)"></textarea>
+                <button id="savePlatesBtn" class="btn btn-secondary mt-2">Save Allowed Plates</button>
+            </div>
 
-        function captureAndSend() {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imgData = canvas.toDataURL("image/jpeg", 0.8);
-            fetch("/detect", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ image: imgData })
-            })
-                .then(r => r.json())
-                .then(data => {
-                    output.textContent = JSON.stringify(data.detections, null, 2);
-                });
-        }
-    </script>
+            <!-- File input for images -->
+            <div class="mb-3" id="imageInput">
+                <input class="form-control" type="file" id="fileInput" accept="image/*">
+            </div>
+
+            <!-- Canvas container for image uploads -->
+            <div id="canvas-container-image" class="mb-3 text-center canvas-container">
+                <div id="containerImage" class="position-relative d-inline-block canvas-container">
+                    <canvas id="previewCanvasImage" class="w-100"></canvas>
+                    <div id="overlayImage"></div>
+                </div>
+            </div>
+
+            <!-- File input for videos -->
+            <div class="mb-3 d-none" id="videoInput">
+                <input class="form-control" type="file" id="videoFileInput" accept="video/*">
+            </div>
+
+            <!-- Video controls -->
+            <div class="mb-3 d-none" id="videoControls">
+                <div class="d-flex justify-content-center align-items-center">
+                    <video id="videoElement" class="w-25 me-3" controls playsinline></video>
+                    <div id="containerVideo" class="w-25 position-relative">
+                        <canvas id="previewCanvasVideo" class="w-100"></canvas>
+                        <div id="overlayVideo"></div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="autoProcess" disabled>
+                        <label class="form-check-label" for="autoProcess">Auto-detect objects in video</label>
+                    </div>
+                    <button class="btn btn-success" id="processVideo">Process Current Frame</button>
+                    <button class="btn btn-danger" id="stopVideo">Stop</button>
+                </div>
+            </div>
+
+            <!-- Live camera controls -->
+            <div class="mb-3 d-none" id="cameraControls">
+                <video id="cameraElement" class="w-100" autoplay playsinline></video>
+                <div class="mt-2">
+                    <!-- Camera selection dropdown -->
+                    <div class="mb-3 d-none" id="cameraSelection">
+                        <label for="cameraSelect" class="form-label">Select Camera:</label>
+                        <select class="form-select" id="cameraSelect">
+                            <option value="" disabled selected>Select a camera</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-success" id="captureFrame">Capture Frame</button>
+                    <button class="btn btn-danger" id="stopCamera">Stop Camera</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Status message -->
+        <div id="status" class="alert alert-info d-none" role="alert"></div>
+
+        <!-- Detection details -->
+        <div id="detection-details" class="detection-details d-none">
+            <h5>Detection Details:</h5>
+            <div id="detection-list"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" id="toastContainer">
+        <!-- Toast Template -->
+        <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <small class="text-muted">just now</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                This is a notification.
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/app.js"></script>
 </body>
 
 </html>
