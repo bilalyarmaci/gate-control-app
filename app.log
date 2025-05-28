@@ -35,3 +35,4 @@
 [2025-05-27 00:13:41,058] WARNING in app: No text detected by any OCR attempt
 [2025-05-27 00:45:41,571] WARNING in app: No text detected by any OCR attempt
 [2025-05-27 00:45:41,645] WARNING in app: No text detected by any OCR attempt
+[2025-05-28 09:53:01,537] ERROR in app: Failed to send serial command: name 'ser' is not defined

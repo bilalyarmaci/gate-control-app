@@ -1,12 +1,10 @@
 from flask import Flask, request, render_template, jsonify
 from ultralytics import YOLO
 import cv2, numpy as np, base64, serial, logging
-from gate_controller import GateController
 from logging.handlers import RotatingFileHandler
-from collections import Counter
 import json
 
-# Import EasyOCR instead of pytesseract
+# or pytesseract
 import easyocr
 
 app = Flask(__name__, template_folder="static")
@@ -23,11 +21,10 @@ handler.setFormatter(formatter)
 # Initialize EasyOCR reader
 reader = easyocr.Reader(['en'], gpu=False)  # Use GPU if available
 
-# 1) Load your trained model
+# 1) Load trained model
 model = YOLO("models/best.pt")
-# gate = GateController()
 
-# 2) (Optional) Set up your Arduino serial port
+# 2) Set up Arduino serial port
 ser = serial.Serial("/dev/cu.usbserial-120", 9600, timeout=1)
 
 @app.route("/")
@@ -65,7 +62,7 @@ def detect():
                 detections.append({
                     "class": class_name,
                     "conf": conf,
-                    "box": [x1, y1, x2, y2]  # Send absolute coordinates
+                    "box": [x1, y1, x2, y2] 
                 })
 
         # Process license plates and add OCR results
@@ -81,7 +78,6 @@ def detect():
             else:
                 plate["ocr_text"] = "Low confidence"
 
-        # Create comprehensive status message
         if not detections:
             status = "No objects detected"
         else:
@@ -174,23 +170,21 @@ def detect():
 
 def crop_plate(img, box):
     try:
-        x1, y1, x2, y2 = box  # Already in absolute coordinates
+        x1, y1, x2, y2 = box
         
-        # Ensure coordinates are within image bounds
+        # coordinates within image bounds
         h, w = img.shape[:2]
         x1, x2 = max(0, int(x1)), min(w, int(x2))
         y1, y2 = max(0, int(y1)), min(h, int(y2))
         
-        # Check if crop area is valid
+        # check crop area is valid
         if x2 <= x1 or y2 <= y1:
             app.logger.warning("Invalid crop dimensions")
             return None
         
-        # Add some padding around the license plate for better OCR
-        padding_x = max(5, int((x2 - x1) * 0.1))  # 10% padding or minimum 5px
-        padding_y = max(3, int((y2 - y1) * 0.1))  # 10% padding or minimum 3px
+        padding_x = max(5, int((x2 - x1) * 0.1))
+        padding_y = max(3, int((y2 - y1) * 0.1))
         
-        # Apply padding while staying within image bounds
         x1_padded = max(0, x1 - padding_x)
         y1_padded = max(0, y1 - padding_y)
         x2_padded = min(w, x2 + padding_x)
@@ -243,7 +237,7 @@ def ocr_plate(crop):
         denoised = cv2.fastNlMeansDenoisingColored(resized, None, 10, 10, 7, 21)
         variants.append(('denoised', denoised))
         
-        # Try OCR on all variants
+        # OCR on all variants
         for variant_name, img in variants:
             # Save debug image
             cv2.imwrite(f'debug_{variant_name}.jpg', img)
